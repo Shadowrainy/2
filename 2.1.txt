@@ -1,0 +1,85 @@
+BR-SRV
+
+apt-get update && apt-get install task-samba-dc –y
+vim /etc/resolv.conf
+	nameserver 192.168.1.10
+rm –rf /etc/samba/smb.conf 
+vim /etc/hosts
+	192.168.3.10  br-srv.au-team.irpo
+samba-tool domain provision
+	AU-TEAM.IRPO
+	AU-TEAM
+	dc
+	SAMBA_INTERNAL
+	192.168.1.10
+	P@ssw0rd
+	P@ssw0rd
+mv –f /var/lib/samba/private/krb5.conf /etc/krb5.conf
+systemctl enable --now samba
+samba-tool user add hquser1 P@ssword
+samba-tool user add hquser2 P@ssword
+samba-tool user add hquser3 P@ssword
+samba-tool user add hquser4 P@ssword
+samba-tool user add hquser5 P@ssword
+samba-tool group add hq
+samba-tool group addmembers hq hquser1
+samba-tool group addmembers hq hquser2
+samba-tool group addmembers hq hquser3
+samba-tool group addmembers hq hquser4
+samba-tool group addmembers hq hquser5
+apt-repo add rpm http://altrepo.ru/local-p10 noarch local-p10
+apt-get update && apt-get install sudo-samba-schema –y
+```
+HQ-SRV
+vim /etc/dnsmasq
+	server=/au-team.irpo/192.168.3.10
+systemctl restart dnsmasq
+```
+HQ-CLI
+Search -> system managment center -> Users(Authentication) -> Active Directory domain ->
+```cs
+Domain:        AU-TEAM.IRPO
+WORKGROUP:     AU-TEAM
+COMPUTER NAME: hq-cli
+	Username: Administrator
+	Password: P@ssw0rd
+systemctl restart network
+apt-get update && apt-get install admc –y
+reboot
+	administrator
+	P@ssw0rd
+```
+BR-SRV
+sudo-schema-apply
+Логин: Administrator
+Пароль: P@ssw0rd
+Пароль повторно: P@ssw0rd
+create-sudo-rule
+	OU: OU=sudoers,dc=AU-TEAM,dc=IRPO
+	Имя правила: prava_hq
+	sudoHost: ALL
+	sudoCommand: /bin/cat
+	sudoUser: %hq
+```
+HQ-CLI
+
+admc
+Включаем Advanced Features:
+au-team.irpo -> sudoers -> prava_hq -> Attributes -> sudoOptions -> add
+	!authenticate
+Дальше SudoCommand
+	/bin/grep
+	/usr/bin/id
+apt-get install sudo libsss_sudo -y
+control sudo public
+vim /etc/sssd/sssd.conf
+	services = nss, pam, sudo
+	sudo_provider = ad
+vim /etc/nsswitch.conf
+	sudoers: files sss
+reboot
+Ctrl+Alt+F2 (hquser1.hq)
+rm –rf /var/lib/sss/db/*
+sss_cache –E
+systemctl restart sssd
+sudo –l –U hquser1
