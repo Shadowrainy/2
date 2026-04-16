@@ -1,0 +1,56 @@
+ **BR-SRV**
+
+
+apt-get update && apt-get install docker-compose-v2 docker-engine -y
+
+systemctl enable --now docker
+
+mkdir /iso
+mount -o loop /dev/sr0 /iso/ - <span style="color:rgb(130, 114, 172)">монтирует содержимое CD/DVD-диска или ISO-образа из устройства /dev/sr0 в папку /iso/, делая файлы доступными сразу без перезагрузки.</span>
+vim /etc/fstab - <span style="color:rgb(130, 114, 172)">это системный конфигурационный файл, который содержит информацию о всех постоянных точках монтирования. Он читается при загрузке системы и автоматически монтирует все указанные файловые системы.</span>
+`/dev/sr0  /iso  iso9660  loop,ro,auto  0  0`
+
+
+docker load -i /iso/docker/mariadb_latest.tar
+docker load -i /iso/docker/site_latest.tar
+
+docker images - <span style="color:rgb(130, 114, 172)">Показывает список всех Docker образов, доступных в локальной системе</span>
+
+vim /root/site.yml -
+`services:`
+ `db:` 
+  `image: mariadb:10.11 `
+  `container_name: db` 
+  `restart: always` 
+   `ports:`
+`ᅠ ᅠ- "3306:3306"` - 
+  `environment:` -
+`ᅠ ᅠMARIADB_ROOT_PASSWORD: toor` -
+`ᅠ ᅠMARIADB_DATABASE: testdb` - 
+`ᅠ ᅠMARIADB_USER: test` - 
+`ᅠ ᅠMARIADB_PASSWORD: P@ssw0rd` - 
+
+ `testapp:` - 
+  `image: site` 
+  `restart: always`
+  `environment:`
+`ᅠ ᅠDB_TYPE: maria` -  
+`ᅠ ᅠDB_HOST: db` - 
+`ᅠ ᅠDB_NAME: testdb` - 
+`ᅠ ᅠDB_USER: test` - 
+`ᅠ ᅠDB_PASS: P@ssw0rd` - 
+`ᅠ ᅠDB_PORT: 3306` - 
+  `ports:`
+`ᅠ ᅠ- "8080:8000"` - 
+  `depends_on:`
+`ᅠ ᅠ- db`
+
+
+*Продолжаем*
+docker compose –f  /root/site.yml up -d 
+ **HQ-CLI**
+
+
+su -
+systemctl restart network
+http://192.168.3.10:8080
