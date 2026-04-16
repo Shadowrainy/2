@@ -1,0 +1,32 @@
+ISP
+apt-get update && apt-get install nginx -y
+apt-get update && apt-get install apache2-htpasswd -y
+
+htpasswd -bc /etc/nginx/.htpasswd WEB P@ssw0rd 
+vim /etc/nginx/sites-available.d/proxy.conf
+ᅠ ᅠ`server {`
+ᅠ ᅠᅠ ᅠ`listen 80;`
+ᅠ ᅠᅠ ᅠ`server_name web.au-team.irpo;`
+ᅠ ᅠᅠ ᅠ`auth_basic "";` 
+ᅠ ᅠᅠ ᅠ`auth_basic_user_file /etc/nginx/.htpasswd;` 
+ᅠ ᅠᅠ ᅠ`location / {`
+ᅠ ᅠᅠ ᅠᅠ ᅠ`proxy_pass http://172.16.1.2:8080;`
+ᅠ ᅠᅠ ᅠᅠ ᅠ`proxy_set_header Host $host;` 
+ᅠ ᅠᅠ ᅠᅠ ᅠ`proxy_set_header X-Real-IP $remote_addr;`
+ᅠ ᅠᅠ ᅠ      `}`
+ᅠ ᅠ`}`
+ᅠ ᅠ`server {` 
+ᅠ ᅠᅠ ᅠ`listen 80;` 
+ᅠ ᅠᅠ ᅠ`server_name docker.au-team.irpo;`
+ᅠ ᅠᅠ ᅠ`location / {` 
+ᅠ ᅠᅠ ᅠᅠ ᅠ`proxy_pass http://172.16.2.2:8080;` 
+ᅠ ᅠᅠ ᅠᅠ ᅠ`proxy_set_header Host $host;` 
+ᅠ ᅠᅠ ᅠᅠ ᅠ`proxy_set_header X-Real-IP $remote_addr;`
+ᅠ ᅠᅠ         `}`
+ᅠ ᅠ`}`
+rm –rf /etc/nginx/sites-available.d/default.conf
+ln –s /etc/nginx/sites-available.d/proxy.conf /etc/nginx/sites-enabled.d/ 
+
+
+systemctl enable --now nginx.service
+systemctl restart nginx.service
