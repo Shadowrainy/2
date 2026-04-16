@@ -1,0 +1,38 @@
+ISP
+```cs
+apt-get install chrony -y
+vim /etc/chrony.conf
+```
+закомментировать всё кроме `/var/lib/chrony/drift` и `/var/log/chrony`
+```cs
+	server 127.0.0.1 iburst prefer
+		hwtimestamp *
+		local stratum 5
+		allow 0/0
+systemctl enable --now chronyd
+systemctl restart chronyd
+chronyc sources
+```
+HQ-SRV
+```cs
+apt-get install chrony -y
+vim /etc/chrony.conf
+	server 172.16.1.1 iburst prefer
+systemctl enable --now chronyd
+systemctl restart chronyd
+```
+HQ-CLI
+```cs
+apt-get install chrony -y
+vim /etc/chrony.conf
+	server 172.16.1.1 iburst prefer
+systemctl enable --now chronyd
+systemctl restart chronyd
+```
+BR-SRV
+```cs
+apt-get install chrony -y
+vim /etc/chrony.conf
+	server 172.16.2.1 iburst prefer
+systemctl enable --now chronyd
+systemctl restart chronyd
